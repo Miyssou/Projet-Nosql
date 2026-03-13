@@ -2,38 +2,40 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-def age_distribution(users):
+# distribution des années de sortie
+def year_distribution(movies):
 
-    df = pd.DataFrame(users)
+    df = pd.DataFrame(movies)
 
     if "_id" in df.columns:
         df = df.drop(columns=["_id"])
 
     fig, ax = plt.subplots()
 
-    df["age"].plot(
+    df["year"].plot(
         kind="hist",
-        bins=10,
+        bins=20,
         ax=ax
     )
 
-    ax.set_title("Distribution des âges")
+    ax.set_title("Distribution des années de sortie")
 
     return fig
 
 
-def age_statistics(users):
+# statistiques sur les films
+def movie_statistics(movies):
 
-    df = pd.DataFrame(users)
+    df = pd.DataFrame(movies)
 
     if "_id" in df.columns:
         df = df.drop(columns=["_id"])
 
     stats = {
-        "Age moyen": df["age"].mean(),
-        "Age minimum": df["age"].min(),
-        "Age maximum": df["age"].max(),
-        "Nombre utilisateurs": len(df)
+        "Année moyenne": df["year"].mean(),
+        "Film le plus ancien": df["year"].min(),
+        "Film le plus récent": df["year"].max(),
+        "Nombre total de films": len(df)
     }
 
     return stats

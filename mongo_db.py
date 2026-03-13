@@ -8,34 +8,39 @@ def connect_mongo():
 
     db = client["nosql_project"]
 
-    collection = db["users"]
+    collection = db["movies"]
 
     return collection
 
 
-def insert_user(collection, name, age):
-
-    user = {
-        "name": name,
-        "age": age
-    }
-
-    collection.insert_one(user)
-
-
-def get_users(collection):
+# récupérer tous les films
+def get_movies(collection):
 
     return list(collection.find())
 
 
-def update_user(collection, name, new_age):
+# chercher un film par titre
+def find_movie_by_title(collection, title):
+
+    return collection.find_one({"title": title})
+
+
+# ajouter un film
+def insert_movie(collection, movie):
+
+    collection.insert_one(movie)
+
+
+# mettre à jour l'année d'un film
+def update_movie_year(collection, title, new_year):
 
     collection.update_one(
-        {"name": name},
-        {"$set": {"age": new_age}}
+        {"title": title},
+        {"$set": {"year": new_year}}
     )
 
 
-def delete_user(collection, name):
+# supprimer un film
+def delete_movie(collection, title):
 
-    collection.delete_one({"name": name})
+    collection.delete_one({"title": title})

@@ -1,14 +1,5 @@
 import streamlit as st
-from analysis import age_distribution, age_statistics
-
-from mongo_db import (
-    connect_mongo,
-    insert_user,
-    get_users,
-    update_user,
-    delete_user
-)
-
+from mongo_db import connect_mongo, get_movies, find_movie_by_title
 from neo4j_db import Neo4jDB
 
 
@@ -16,144 +7,105 @@ from neo4j_db import Neo4jDB
 collection = connect_mongo()
 neo = Neo4jDB()
 
-
-st.title("Projet NoSQL")
+st.title("Projet NoSQL - Movies Database")
 
 st.sidebar.title("Menu")
 
 menu = st.sidebar.radio(
     "Choisir une section",
     [
-        "Ajouter utilisateur",
-        "Voir utilisateurs",
-        "Modifier utilisateur",
-        "Supprimer utilisateur",
-        "Neo4j - Ajouter personne",
-        "Neo4j - Créer relation",
-        "Analyse données"
+        "Voir tous les films",
+        "Rechercher un film",
+        "Neo4j - Ajouter acteur",
+        "Neo4j - Ajouter film",
+        "Neo4j - Créer relation acteur-film"
     ]
 )
 
 
 # ---------------------------
-# Ajouter utilisateur
+# Voir tous les films
 # ---------------------------
 
-if menu == "Ajouter utilisateur":
+if menu == "Voir tous les films":
 
-    st.header("Ajouter utilisateur")
+    st.header("Liste des films")
 
-    name = st.text_input("Nom")
-    age = st.number_input("Age", min_value=0)
+    movies = get_movies(collection)
 
-    if st.button("Ajouter"):
+    for movie in movies:
 
-        insert_user(collection, name, age)
-
-        st.success("Utilisateur ajouté")
+        st.write(movie)
 
 
 # ---------------------------
-# Voir utilisateurs
+# Rechercher un film
 # ---------------------------
 
-elif menu == "Voir utilisateurs":
+elif menu == "Rechercher un film":
 
-    st.header("Liste des utilisateurs")
+    st.header("Rechercher un film")
 
-    users = get_users(collection)
+    title = st.text_input("Titre du film")
 
-    for user in users:
+    if st.button("Rechercher"):
 
-        st.write(
-            f"Nom : {user['name']} | Age : {user['age']}"
-        )
+        movie = find_movie_by_title(collection, title)
 
-
-# ---------------------------
-# Modifier utilisateur
-# ---------------------------
-
-elif menu == "Modifier utilisateur":
-
-    st.header("Modifier utilisateur")
-
-    name = st.text_input("Nom utilisateur")
-    new_age = st.number_input("Nouvel âge", min_value=0)
-
-    if st.button("Modifier"):
-
-        update_user(collection, name, new_age)
-
-        st.success("Utilisateur modifié")
+        if movie:
+            st.write(movie)
+        else:
+            st.warning("Film non trouvé")
 
 
 # ---------------------------
-# Supprimer utilisateur
+# Neo4j ajouter acteur
 # ---------------------------
 
-elif menu == "Supprimer utilisateur":
+elif menu == "Neo4j - Ajouter acteur":
 
-    st.header("Supprimer utilisateur")
+    st.header("Ajouter acteur")
 
-    name = st.text_input("Nom à supprimer")
+    actor = st.text_input("Nom de l'acteur")
 
-    if st.button("Supprimer"):
+    if st.button("Ajouter acteur"):
 
-        delete_user(collection, name)
+        neo.create_actor(actor)
 
-        st.success("Utilisateur supprimé")
-
-
-# ---------------------------
-# Neo4j ajouter personne
-# ---------------------------
-
-elif menu == "Neo4j - Ajouter personne":
-
-    st.header("Ajouter personne dans Neo4j")
-
-    name = st.text_input("Nom de la personne")
-
-    if st.button("Créer personne"):
-
-        neo.create_person(name)
-
-        st.success("Personne créée")
+        st.success("Acteur ajouté")
 
 
 # ---------------------------
-# Neo4j créer relation
+# Neo4j ajouter film
 # ---------------------------
 
-elif menu == "Neo4j - Créer relation":
+elif menu == "Neo4j - Ajouter film":
 
-    st.header("Créer relation")
+    st.header("Ajouter film")
 
-    person1 = st.text_input("Personne 1")
-    person2 = st.text_input("Personne 2")
+    title = st.text_input("Titre")
+    year = st.number_input("Année", min_value=1900)
+
+    if st.button("Ajouter film"):
+
+        neo.create_movie(title, year)
+
+        st.success("Film ajouté dans Neo4j")
+
+
+# ---------------------------
+# Neo4j relation acteur-film
+# ---------------------------
+
+elif menu == "Neo4j - Créer relation acteur-film":
+
+    st.header("Créer relation ACTED_IN")
+
+    actor = st.text_input("Acteur")
+    movie = st.text_input("Film")
 
     if st.button("Créer relation"):
 
-        neo.create_relation(person1, person2)
+        neo.create_acted_in(actor, movie)
 
         st.success("Relation créée")
-#code d'analyse 
-elif menu == "Analyse données":
-
-    st.header("Analyse des utilisateurs")
-
-    users = get_users(collection)
-
-    stats = age_statistics(users)
-
-    st.subheader("Statistiques")
-
-    for key, value in stats.items():
-        st.write(f"{key} : {value}")
-
-    st.subheader("Distribution des âges")
-
-    fig = age_distribution(users)
-
-    st.pyplot(fig)

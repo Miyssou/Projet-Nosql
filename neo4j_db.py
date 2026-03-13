@@ -11,31 +11,47 @@ class Neo4jDB:
             auth=(NEO4J_USER, NEO4J_PASSWORD)
         )
 
-    def create_person(self, name):
+    # créer un film
+    def create_movie(self, title, year):
 
         query = """
-        CREATE (p:Person {name:$name})
+        CREATE (m:Movie {title:$title, year:$year})
+        """
+
+        with self.driver.session() as session:
+            session.run(query, title=title, year=year)
+
+
+    # créer un acteur
+    def create_actor(self, name):
+
+        query = """
+        CREATE (a:Actor {name:$name})
         """
 
         with self.driver.session() as session:
             session.run(query, name=name)
 
-    def create_relation(self, name1, name2):
+
+    # créer relation acteur -> film
+    def create_acted_in(self, actor, movie):
 
         query = """
-        MATCH (a:Person {name:$name1}),
-              (b:Person {name:$name2})
-        CREATE (a)-[:KNOWS]->(b)
+        MATCH (a:Actor {name:$actor}),
+              (m:Movie {title:$movie})
+        CREATE (a)-[:ACTED_IN]->(m)
         """
 
         with self.driver.session() as session:
-            session.run(query, name1=name1, name2=name2)
+            session.run(query, actor=actor, movie=movie)
 
-    def get_relations(self):
+
+    # récupérer les relations acteur-film
+    def get_actor_movie_relations(self):
 
         query = """
-        MATCH (a)-[r]->(b)
-        RETURN a.name, type(r), b.name
+        MATCH (a:Actor)-[r:ACTED_IN]->(m:Movie)
+        RETURN a.name, m.title
         """
 
         with self.driver.session() as session:
